@@ -94,7 +94,8 @@
 button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulation;user-select:none}
 .wrap{pointer-events:auto;position:fixed;left:0;right:0;bottom:0;background:#0b0d10;color:#eceff2;border-top:1px solid #222830;padding:4px 6px calc(4px + env(safe-area-inset-bottom))}
 .in{max-width:820px;margin:0 auto;display:grid;gap:4px}
-.ctl{display:grid;grid-template-columns:1fr 1.3fr 1.3fr .85fr 1.1fr .85fr .8fr .8fr;gap:4px;height:42px}
+.ctl{display:grid;grid-template-columns:1fr 1.25fr 1.25fr .85fr .8fr 1.1fr .8fr .8fr .8fr;gap:4px;height:42px}
+.ctl .clr{color:#ff8a7a;font-size:17px}
 .ctl button{background:#1c2128;border-radius:9px;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;min-width:0}
 .ctl button:active,.sheet button:active{filter:brightness(1.5)}
 .ctl .play{background:#123b2a;color:#2fcf8a}.ctl .play.on{background:#262c34;color:#eceff2}
@@ -103,13 +104,17 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
 .ctl .more.on{background:#f5a524;color:#1a1200}
 .rate{display:flex;align-items:center;justify-content:center;color:#f5a524;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
 .bar{position:relative;border-radius:7px;background:#1b1f25;touch-action:none;cursor:pointer;overflow:hidden}
-.full{height:16px;background:#2a2f37}.zoom{height:26px;background:#181c22;box-shadow:inset 0 0 0 1px #262c34}
+.full{height:22px;background:#20252c}.zoom{height:24px;background:#181c22;box-shadow:inset 0 0 0 1px #262c34}
+.svs{position:absolute;inset:0;pointer-events:none}
+.sv{position:absolute;top:0;bottom:0;min-width:3px;background:#4d7cff30;border-left:1px solid #6f9bff;border-right:1px solid #6f9bff;overflow:hidden;font-size:9px;line-height:10px;color:#b9ccff;padding:1px 2px;white-space:nowrap;text-overflow:clip}
+.sv.on{background:none;border-color:transparent;color:#f5a524;z-index:1}
 .ticks{position:absolute;inset:0;background-image:linear-gradient(to right,#ffffff1c 1px,transparent 1px);pointer-events:none}
 .rng{position:absolute;top:0;bottom:0;background:#f5a52438;border-left:2px solid #f5a524;border-right:2px solid #f5a524;pointer-events:none}
 .ph{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:#eceff2;pointer-events:none}
 .hd{position:absolute;top:0;bottom:0;width:22px;margin-left:-11px;pointer-events:none;display:flex;align-items:flex-end;justify-content:center}
 .hd i{font-style:normal;font-size:9px;font-weight:800;background:#f5a524;color:#1a1200;border-radius:3px;padding:0 3px;margin-bottom:1px}
 .full .hd i{display:none}
+.full .zt.r{top:auto;bottom:1px}
 .zt{position:absolute;top:1px;font-size:9px;color:#6f7884;pointer-events:none;font-variant-numeric:tabular-nums}
 .zt.l{left:4px}.zt.r{right:4px}
 .sheet{position:absolute;left:0;right:0;bottom:100%;background:#0b0d10f2;border-top:1px solid #222830;padding:6px 6px 4px;max-height:70vh;overflow:auto}
@@ -161,7 +166,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
 <div class="wrap" id="wrap">
   <div class="sheet" id="sheet" hidden><div class="in">
     <div class="shead"><span id="info"></span><span id="zMid"></span></div>
-    <div class="bar full" id="full"><div class="rng"></div><div class="ph"></div><div class="hd a"><i>A</i></div><div class="hd b"><i>B</i></div></div>
     <div class="row r6">
       <button class="sb" data-r="-5">−5</button><button class="sb" data-r="-1">−1</button><button class="sb" data-r="1">+1</button><button class="sb" data-r="5">+5</button>
       <button class="sb" id="r100">100%</button><button class="sb loop on" id="loop">반복</button>
@@ -194,15 +198,17 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       <label><input type="checkbox" id="ci"> 쉬는 동안 삑 소리</label>
       <div class="nud"><span>A</span><button data-w="A" data-d="-0.5">−0.5</button><button data-w="A" data-d="-0.05">−0.05</button><button data-w="A" data-d="0.05">+0.05</button><button data-w="A" data-d="0.5">+0.5</button></div>
       <div class="nud"><span>B</span><button data-w="B" data-d="-0.5">−0.5</button><button data-w="B" data-d="-0.05">−0.05</button><button data-w="B" data-d="0.05">+0.05</button><button data-w="B" data-d="0.5">+0.5</button></div>
-      <div style="color:#8d95a1;font-size:12px;line-height:1.6">아래 줄: ⟲ 구간 처음 · ▶ 재생 · A·B 찍기 · − + 속도 · ⋯ 더보기 · ✕ 연습 화면 닫기<br>페달/키보드: ← PageUp 구간 처음 · → PageDown 재생/정지 · Enter 또는 M = A·B 찍기 · [ ] A/B 따로 · ↑ ↓ 속도</div>
+      <div style="color:#8d95a1;font-size:12px;line-height:1.6">위 막대: 곡 전체 (끌면 새 구간, 파란색 = 저장한 구간, 누르면 불러오기) · 아래 막대: 구간 확대<br>아래 줄: ⟲ 구간 처음 · ▶ 재생 · A·B 찍기 · ⌫ 구간 지우기 · − + 속도 · ⋯ 더보기 · ✕ 연습 화면 닫기<br>페달/키보드: ← PageUp 구간 처음 · → PageDown 재생/정지 · Enter 또는 M = A·B 찍기 · Delete 구간 지우기 · [ ] A/B 따로 · ↑ ↓ 속도</div>
     </div>
   </div></div>
   <div class="in">
-    <div class="bar zoom" id="zoom"><div class="ticks"></div><div class="rng"></div><div class="ph"></div><div class="hd a"><i>A</i></div><div class="hd b"><i>B</i></div><span class="zt l" id="zLo"></span><span class="zt r" id="zHi"></span></div>
+    <div class="bar full" id="full" title="곡 전체: 끌어서 구간 잡기 · 저장한 구간(파란색)을 누르면 불러오기"><div class="svs" id="svs"></div><div class="rng"></div><div class="ph"></div><div class="hd a"><i>A</i></div><div class="hd b"><i>B</i></div><span class="zt r" id="fT"></span></div>
+    <div class="bar zoom" id="zoom" title="구간 확대: A·B 손잡이를 끌어 미세 조정"><div class="ticks"></div><div class="rng"></div><div class="ph"></div><div class="hd a"><i>A</i></div><div class="hd b"><i>B</i></div><span class="zt l" id="zLo"></span><span class="zt r" id="zHi"></span></div>
     <div class="ctl">
       <button id="back" title="구간 처음">⟲</button>
       <button class="play" id="play" title="재생/정지">▶</button>
       <button class="ab" id="mk" title="A·B 찍기"><span id="mkT">A·B</span></button>
+      <button class="clr" id="clr" title="A·B 구간 지우기">⌫</button>
       <button class="sp" data-r="-5" title="느리게">−</button>
       <span class="rate" id="rate">100%</span>
       <button class="sp" data-r="5" title="빠르게">+</button>
@@ -485,7 +491,30 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       else m.textContent = '막대를 끌어서 구간 잡기';
     }
   }
-  function renderBars() { if (!cfg.open || !st.id) return; if (sheetOpen) renderBar('full'); renderBar('zoom'); }
+  function renderBars() {
+    if (!cfg.open || !st.id) return;
+    renderBar('full'); renderBar('zoom'); renderSaved();
+    $('#fT').textContent = video ? fmt(video.currentTime, 0) + ' / ' + fmt(dur(), 0) : '';
+  }
+  // Saved sections drawn on the whole-song bar (blue); the active one is shown by the orange range instead.
+  let svKey = '';
+  function renderSaved() {
+    const D = dur(), key = D + '|' + st.cur + '|' + st.secs.map(s => s.n + ':' + s.A + ':' + s.B).join('|');
+    if (key === svKey) return;
+    svKey = key;
+    const box = $('#svs'); box.textContent = '';
+    if (!D) return;
+    st.secs.forEach((s, i) => {
+      const e = el('div', 'sv' + (i === st.cur ? ' on' : ''), s.n);
+      e.style.left = (s.A / D * 100) + '%'; e.style.width = ((s.B - s.A) / D * 100) + '%';
+      box.appendChild(e);
+    });
+  }
+  function savedAt(t) {
+    let best = -1;
+    st.secs.forEach((s, i) => { if (t >= s.A && t <= s.B && (best < 0 || s.B - s.A < st.secs[best].B - st.secs[best].A)) best = i; });
+    return best;
+  }
   function barTime(d, x) { const r = d.el.getBoundingClientRect(); return d.lo + clamp((x - r.left) / r.width, 0, 1) * (d.hi - d.lo); }
   function onDown(name, e) {
     if (!video || !dur() || (e.button != null && e.button > 0)) return;
@@ -517,7 +546,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
   function onUp(e) {
     const d = drag; if (!d || e.pointerId !== d.id) return;
     drag = null;
-    if (!d.moved) { seek(d.anchor); lastLoop = performance.now(); }
+    if (!d.moved) {
+      const i = d.bar === 'full' && d.mode === 'new' ? savedAt(d.anchor) : -1;
+      if (i >= 0 && i !== st.cur) { useSection(i); return; }
+      seek(d.anchor); lastLoop = performance.now();
+    }
     else {
       st.loops = 0; tr.done = 0; save();
       if (d.mode !== 'B') goA(!!video && !video.paused);
@@ -554,7 +587,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
   $('#loop').addEventListener('click', toggleLoop);
   $('#add').addEventListener('click', addSection);
   $('#add2').addEventListener('click', addSection);
-  $('#clear').addEventListener('click', () => { newRange(); st.A = st.B = null; markStage = 0; save(); renderLists(); ui(); toast('구간을 지웠어요'); });
+  function clearRange() { newRange(); st.A = st.B = null; markStage = 0; save(); renderLists(); ui(); toast('A·B 구간을 지웠어요 (저장한 구간은 그대로)'); }
+  $('#clear').addEventListener('click', clearRange);
+  $('#clr').addEventListener('click', clearRange);
   $('#back').addEventListener('click', () => goA(true));
   $('#play').addEventListener('click', togglePlay);
   $('#mk').addEventListener('click', mark);
@@ -608,7 +643,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
 
   // Pedal / keyboard (capture phase so YouTube doesn't also act on these keys)
   const keyMap = { ArrowLeft: 'back', PageUp: 'back', ArrowRight: 'play', PageDown: 'play', Enter: 'mark', m: 'mark', M: 'mark',
-    '[': 'A', ']': 'B', ArrowUp: 'up', ArrowDown: 'down' };
+    '[': 'A', ']': 'B', ArrowUp: 'up', ArrowDown: 'down', Delete: 'clear' };
   window.addEventListener('keydown', e => {
     const act = keyMap[e.key];
     if (!cfg.open || !st.id || !act || e.ctrlKey || e.altKey || e.metaKey) return;
@@ -622,6 +657,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       case 'play': togglePlay(); break;
       case 'mark': mark(); break;
       case 'A': setA(); break;
+      case 'clear': clearRange(); break;
       case 'B': setB(); break;
       case 'up': setRate(st.rate + 5); toast('속도 ' + st.rate + '%'); break;
       case 'down': setRate(st.rate - 5); toast('속도 ' + st.rate + '%'); break;
