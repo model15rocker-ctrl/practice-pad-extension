@@ -517,7 +517,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
   ytMark.id = 'practice-pad-range';
   ytMark.style.cssText = 'position:absolute;top:0;bottom:0;height:100%;background:rgba(245,165,36,.6);pointer-events:none;z-index:40;border-radius:1px;';
   function renderYT() {
-    const bar = document.querySelector('.ytp-progress-bar .ytp-progress-list') ||
+    const bar = document.querySelector('.ytp-progress-bar') ||
       document.querySelector('.ytChapteredProgressBarHost, yt-chaptered-progress-bar-line');
     const D = dur();
     if (!bar || !D || st.A == null || st.B == null || st.B <= st.A) { ytMark.style.display = 'none'; return; }
