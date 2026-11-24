@@ -13,8 +13,9 @@
       try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; }
     },
     set(k, v) {
-      try { if (hasExt) { chrome.storage.local.set({ [k]: v }); return; } } catch (e) {}
+      try { if (hasExt) return chrome.storage.local.set({ [k]: v }); } catch (e) {}
       try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
+      return Promise.resolve();
     }
   };
 
@@ -796,6 +797,82 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     e.textContent = fmt(video.currentTime) + (loopActive() ? ' · ' + st.loops + '회 반복' : '') + (tr.on ? ' · 자동↑' : '') + ad;
   }
 
+  // ---------- practice library (the desktop shortcut opens youtube.com/#pp-library) ----------
+  let libHost = null;
+  const LIB_CSS = '*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif}' +
+    'button,input{font:inherit;color:inherit;border:0}button{cursor:pointer}' +
+    '.pg{position:fixed;inset:0;background:#0b0d10;color:#eceff2;display:flex;flex-direction:column}' +
+    'header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #222830;flex-wrap:wrap}' +
+    'header b{font-size:20px;color:#f5a524;white-space:nowrap}header .cnt{color:#8d95a1;font-size:13px;flex:1;white-space:nowrap}' +
+    'header input{background:#1c2128;border-radius:9px;padding:8px 12px;min-width:160px;flex:0 1 260px;outline:none}' +
+    'header button{background:#1c2128;border-radius:9px;padding:8px 14px;font-weight:700}' +
+    'main{flex:1;overflow:auto;padding:14px 16px 30px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;align-content:start}' +
+    '.card{background:#151920;border:1px solid #232830;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}' +
+    '.top{display:flex;gap:10px;padding:10px;text-align:left;background:none;align-items:center}.top:hover{background:#1b2029}' +
+    '.th{flex:none;width:128px;height:72px;border-radius:8px;overflow:hidden;background:#000}.th img{width:100%;height:100%;object-fit:cover;display:block}' +
+    '.tt{min-width:0;flex:1}.tt b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px;line-height:1.35}' +
+    '.tt small{display:block;color:#8d95a1;font-size:12px;margin-top:4px}' +
+    '.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 10px 10px}' +
+    '.chip{background:#2d2410;color:#f5a524;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:700;text-align:left}.chip:hover{filter:brightness(1.3)}' +
+    '.chip span{color:#c9a463;font-weight:500;margin-left:6px}.chip.on{box-shadow:inset 0 0 0 2px #f5a524}' +
+    '.empty{color:#8d95a1;line-height:1.7;padding:30px 4px;grid-column:1/-1}';
+  function ago(u) {
+    if (!u) return '';
+    const d = Math.floor((Date.now() - u) / 86400000);
+    return d <= 0 ? '오늘 연습' : d === 1 ? '어제 연습' : d + '일 전 연습';
+  }
+  async function openFromLibrary(id, i) {
+    const d = (await store.get('pp:v:' + id, null)) || {};
+    if (i != null && Array.isArray(d.secs) && d.secs[i]) { const s = d.secs[i]; d.cur = i; d.A = s.A; d.B = s.B; d.rate = s.r || 100; d.loopOn = true; }
+    cfg.open = true;
+    await Promise.all([store.set('pp:v:' + id, d), store.set('pp:cfg', cfg)]);
+    location.href = location.origin + '/watch?v=' + encodeURIComponent(id);
+  }
+  async function showLibrary() {
+    if (libHost) return;
+    libHost = document.createElement('div');
+    libHost.id = 'practice-pad-library';
+    libHost.style.cssText = 'all:initial;position:fixed;inset:0;z-index:2147483647;';
+    ['keydown', 'keyup', 'keypress'].forEach(ev => libHost.addEventListener(ev, e => e.stopPropagation()));
+    const r2 = libHost.attachShadow({ mode: 'open' });
+    r2.innerHTML = html('<style>' + LIB_CSS + '</style><div class="pg"><header><b>🎸 내 연습 목록</b><span class="cnt" id="cnt"></span><input id="q" placeholder="곡 찾기"><button id="close">유튜브로 가기</button></header><main id="list"></main></div>');
+    document.documentElement.appendChild(libHost);
+    document.title = '내 연습 목록';
+    r2.querySelector('#close').addEventListener('click', () => { history.replaceState(null, '', location.pathname + location.search); hideLibrary(); });
+    const L = await store.get('pp:lib', {});
+    const ids = Object.keys(L).sort((a, b) => (L[b].u || 0) - (L[a].u || 0));
+    const songs = await Promise.all(ids.map(async id => ({ id, m: L[id], d: (await store.get('pp:v:' + id, null)) || {} })));
+    const list = r2.querySelector('#list');
+    r2.querySelector('#cnt').textContent = '곡 ' + songs.length + '개 · 곡을 누르면 마지막 구간으로, 구간을 누르면 그 구간으로 열려요';
+    function draw(qs) {
+      list.textContent = '';
+      const shown = songs.filter(x => !qs || (x.m.t || '').toLowerCase().includes(qs));
+      if (!shown.length) list.appendChild(el('div', 'empty', songs.length ? '찾는 곡이 없어요.' : '아직 저장한 곡이 없어요. 유튜브 영상에서 A·B 구간을 잡고 "＋ 저장"을 누르면 여기에 곡별로 모여요.'));
+      shown.forEach(x => {
+        const secs = Array.isArray(x.d.secs) ? x.d.secs : [];
+        const card = el('div', 'card');
+        const top = el('button', 'top'), th = el('span', 'th'), im = document.createElement('img'), tt = el('span', 'tt');
+        im.alt = ''; im.loading = 'lazy'; im.src = 'https://i.ytimg.com/vi/' + x.id + '/mqdefault.jpg';
+        th.appendChild(im);
+        tt.appendChild(el('b', '', x.m.t || x.d.title || x.id));
+        tt.appendChild(el('small', '', '구간 ' + secs.length + '개' + (x.m.u ? ' · ' + ago(x.m.u) : '')));
+        top.append(th, tt);
+        top.addEventListener('click', () => openFromLibrary(x.id, null));
+        const chips = el('div', 'chips');
+        secs.forEach((s, i) => {
+          const c = el('button', 'chip' + (i === x.d.cur ? ' on' : ''), s.n);
+          c.appendChild(el('span', '', fmt(s.A, 0) + '–' + fmt(s.B, 0) + ' · ' + (s.r || 100) + '%'));
+          c.addEventListener('click', () => openFromLibrary(x.id, i));
+          chips.appendChild(c);
+        });
+        card.append(top, chips); list.appendChild(card);
+      });
+    }
+    draw('');
+    r2.querySelector('#q').addEventListener('input', e => draw(e.target.value.trim().toLowerCase()));
+  }
+  function hideLibrary() { if (libHost) { libHost.remove(); libHost = null; } }
+
   // ---------- main loop ----------
   let lastInfo = 0;
   function tick() {
@@ -821,6 +898,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       if (Math.abs(video.playbackRate - st.rate / 100) > 0.001) applyRate();
       if (loopActive() && !inGap && !drag && !video.paused && performance.now() - lastLoop > 250 && video.currentTime >= st.B) loopEnd();
     }
+    if (location.hash === '#pp-library') showLibrary(); else if (libHost) hideLibrary();
     const now = performance.now();
     if (now - lastInfo > 100) { lastInfo = now; info(); renderBars(); renderYT(); setFull(cfg.open && !!st.id); layout(); renderPlaylist(); }
     if (!tick.busy) { tick.busy = true; requestAnimationFrame(() => { tick.busy = false; tick(); }); }
