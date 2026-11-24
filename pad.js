@@ -207,11 +207,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       <label><input type="checkbox" id="ci"> 쉬는 동안 삑 소리</label>
       <div class="nud"><span>A</span><button data-w="A" data-d="-0.5">−0.5</button><button data-w="A" data-d="-0.05">−0.05</button><button data-w="A" data-d="0.05">+0.05</button><button data-w="A" data-d="0.5">+0.5</button></div>
       <div class="nud"><span>B</span><button data-w="B" data-d="-0.5">−0.5</button><button data-w="B" data-d="-0.05">−0.05</button><button data-w="B" data-d="0.05">+0.05</button><button data-w="B" data-d="0.5">+0.5</button></div>
-      <div style="color:#8d95a1;font-size:12px;line-height:1.6">위 막대: 곡 전체 (끌면 새 구간, 파란색 = 저장한 구간, 누르면 불러오기) · 아래 막대: 구간 확대<br>아래 줄: ⟲ 구간 처음 · ▶ 재생 · A·B 찍기 · ⌫ 구간 지우기 · − + 속도 · ☰ 재생목록(있을 때) · ⋯ 더보기 · ✕ 연습 화면 닫기<br>페달/키보드: ← PageUp 구간 처음 · → PageDown 재생/정지 · Enter 또는 M = A·B 찍기 · Delete 구간 지우기 · [ ] A/B 따로 · + − 또는 ↑ ↓ 속도</div>
+      <div style="color:#8d95a1;font-size:12px;line-height:1.6">위 막대: 곡 전체 (누르거나 끌어서 이동, 파란색 = 저장한 구간, 누르면 불러오기) · 아래 막대: 구간 확대 (손잡이로 A·B 조절, 빈 곳을 끌면 새 구간)<br>아래 줄: ⟲ 구간 처음 · ▶ 재생 · A·B 찍기 · ⌫ 구간 지우기 · − + 속도 · ☰ 재생목록(있을 때) · ⋯ 더보기 · ✕ 연습 화면 닫기<br>페달/키보드: ← PageUp 구간 처음 · → PageDown 재생/정지 · Enter 또는 M = A·B 찍기 · Delete 구간 지우기 · [ ] A/B 따로 · + − 또는 ↑ ↓ 속도</div>
     </div>
   </div></div>
   <div class="in">
-    <div class="bar full" id="full" title="곡 전체: 끌어서 구간 잡기 · 저장한 구간(파란색)을 누르면 불러오기"><div class="svs" id="svs"></div><div class="rng"></div><div class="ph"></div><div class="hd a"><i>A</i></div><div class="hd b"><i>B</i></div><span class="zt r" id="fT"></span></div>
+    <div class="bar full" id="full" title="곡 전체: 누르거나 끌어서 이동 · 저장한 구간(파란색)을 누르면 불러오기"><div class="svs" id="svs"></div><div class="rng"></div><div class="ph"></div><div class="hd a"><i>A</i></div><div class="hd b"><i>B</i></div><span class="zt r" id="fT"></span></div>
     <div class="bar zoom" id="zoom" title="구간 확대: A·B 손잡이를 끌어 미세 조정"><div class="ticks"></div><div class="rng"></div><div class="ph"></div><div class="hd a"><i>A</i></div><div class="hd b"><i>B</i></div><span class="zt l" id="zLo"></span><span class="zt r" id="zHi"></span></div>
     <div class="ctl">
       <button id="back" title="구간 처음">⟲</button>
@@ -349,7 +349,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     if (st.A == null) st.A = 0;
     if (t <= st.A + 0.1) { toast('B는 A보다 뒤에서 눌러 주세요'); return; }
     if (st.cur >= 0 && markStage === 0) newRange();
-    st.B = t; st.loops = 0; tr.done = 0; markStage = 0; save();
+    st.B = t; st.loops = 0; tr.done = 0; markStage = 0; st.loopOn = true; save();
     if (st.loopOn) { toast('구간 ' + fmt(st.A) + '–' + fmt(st.B) + ' 반복'); goA(true); }
     else { toast('B 지점 ' + fmt(t)); ui(); }
   }
@@ -534,7 +534,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     const px = t => r.left + (t - lo) / (hi - lo) * r.width;
     const dA = st.A != null ? Math.abs(e.clientX - px(st.A)) : 1e9;
     const dB = st.B != null && st.A != null && st.B > st.A ? Math.abs(e.clientX - px(st.B)) : 1e9;
-    if (Math.min(dA, dB) < 20) d.mode = dA <= dB ? 'A' : 'B';
+    if (name === 'full') d.mode = 'scrub'; // whole-song bar only moves the playhead
+    else if (Math.min(dA, dB) < 20) d.mode = dA <= dB ? 'A' : 'B';
     drag = d;
     try { elb.setPointerCapture(e.pointerId); } catch (er) {}
     e.preventDefault();
@@ -544,6 +545,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     if (!d.moved && Math.abs(e.clientX - d.x0) < 5) return;
     d.moved = true;
     const t = barTime(d, e.clientX), D = dur();
+    if (d.mode === 'scrub') { d.lastT = t; seek(t); renderBars(); return; }
     if (d.mode === 'A') st.A = clamp(t, 0, st.B != null && st.B > st.A ? st.B - 0.05 : D);
     else if (d.mode === 'B') st.B = clamp(t, st.A + 0.05, D);
     else {
@@ -556,12 +558,17 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
   function onUp(e) {
     const d = drag; if (!d || e.pointerId !== d.id) return;
     drag = null;
-    if (!d.moved) {
-      const i = d.bar === 'full' && d.mode === 'new' ? savedAt(d.anchor) : -1;
+    if (d.mode === 'scrub') {
+      const t = d.moved && d.lastT != null ? d.lastT : d.anchor;
+      const i = d.moved ? -1 : savedAt(t);
       if (i >= 0 && i !== st.cur) { useSection(i); return; }
-      seek(d.anchor); lastLoop = performance.now();
+      seek(t); lastLoop = performance.now();
+      // moving outside the A-B range: stop looping so the jump isn't undone
+      if (loopActive() && (t < st.A - 0.05 || t > st.B)) { st.loopOn = false; save(); toast('구간 밖으로 이동 · 반복 꺼짐 (A·B를 다시 찍거나 ⋯에서 반복 켜기)'); }
     }
+    else if (!d.moved) { seek(d.anchor); lastLoop = performance.now(); }
     else {
+      if (d.mode === 'new') st.loopOn = true;
       st.loops = 0; tr.done = 0; save();
       if (d.mode !== 'B') goA(!!video && !video.paused);
       else if (video && video.currentTime > st.B) goA(!video.paused);
@@ -590,7 +597,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     ytMark.style.left = (st.A / D * 100) + '%';
     ytMark.style.width = ((st.B - st.A) / D * 100) + '%';
   }
-
   // ---------- YouTube playlist (shown beside the video on wide screens, over it on phones) ----------
   let plOpen = null, plItems = [], plKey = '', lastPR = -1, plRead = 0;
   const hasList = () => { try { return new URL(location.href).searchParams.has('list'); } catch (e) { return false; } };
