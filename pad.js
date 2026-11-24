@@ -725,7 +725,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     }
     const now = performance.now();
     if (now - lastInfo > 100) { lastInfo = now; info(); renderBars(); renderYT(); setFull(cfg.open && !!st.id); layout(); }
-    requestAnimationFrame(tick);
+    if (!tick.busy) { tick.busy = true; requestAnimationFrame(() => { tick.busy = false; tick(); }); }
   }
 
   (async () => {
@@ -733,6 +733,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     lib = await store.get('pp:lib', {});
     document.documentElement.appendChild(host);
     ui();
-    requestAnimationFrame(tick);
+    setInterval(tick, 100); tick();
   })();
 })();
