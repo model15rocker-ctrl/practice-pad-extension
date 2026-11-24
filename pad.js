@@ -94,14 +94,22 @@
 button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulation;user-select:none}
 .wrap{pointer-events:auto;position:fixed;left:0;right:0;bottom:0;background:#0b0d10;color:#eceff2;border-top:1px solid #222830;padding:4px 6px calc(4px + env(safe-area-inset-bottom))}
 .in{max-width:820px;margin:0 auto;display:grid;gap:4px}
-.ctl{display:grid;grid-template-columns:1fr 1.25fr 1.25fr .85fr .8fr 1.1fr .8fr .8fr .8fr;gap:4px;height:42px}
+.ctl{display:flex;gap:4px;height:42px}
+.ctl>*{flex:1 1 0;min-width:0}
+.ctl .play,.ctl .ab{flex-grow:1.25}.ctl .rate{flex-grow:1.1}.ctl .sp,.ctl .more,.ctl .x2{flex-grow:.8}.ctl .clr{flex-grow:.85}
 .ctl .clr{color:#ff8a7a;font-size:17px}
 .ctl button{background:#1c2128;border-radius:9px;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;min-width:0}
 .ctl button:active,.sheet button:active{filter:brightness(1.5)}
 .ctl .play{background:#123b2a;color:#2fcf8a}.ctl .play.on{background:#262c34;color:#eceff2}
 .ctl .ab{background:#2d2410;color:#f5a524;font-size:15px}.ctl .ab.wait{background:#5a4208;box-shadow:inset 0 0 0 2px #f5a524}
 .ctl .sp{font-size:20px}
-.ctl .more.on{background:#f5a524;color:#1a1200}
+.ctl .more.on,.ctl .plb.on{background:#f5a524;color:#1a1200}
+.plp{pointer-events:auto;position:fixed;top:0;right:0;bottom:var(--bh,100px);width:min(360px,86vw);background:#0b0d10;border-left:1px solid #222830;display:flex;flex-direction:column;color:#eceff2}
+.plh{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 8px 6px 10px;font-size:13px}
+.plh b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plh button{background:#1c2128;border-radius:8px;padding:5px 10px;font-size:13px;flex:none}
+#plList{overflow:auto;padding:0 6px 8px;flex:1;align-content:start}
+#plList .go small{display:block}
 .rate{display:flex;align-items:center;justify-content:center;color:#f5a524;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
 .bar{position:relative;border-radius:7px;background:#1b1f25;touch-action:none;cursor:pointer;overflow:hidden}
 .full{height:22px;background:#20252c}.zoom{height:24px;background:#181c22;box-shadow:inset 0 0 0 1px #262c34}
@@ -163,6 +171,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
 </style>
 <div class="toast" id="toast"></div>
 <button class="fab" id="fab" hidden>🎸 연습 화면</button>
+<div class="plp" id="plp" hidden><div class="plh"><b id="plT">재생목록</b><button id="plX">닫기</button></div><div class="list" id="plList"></div></div>
 <div class="wrap" id="wrap">
   <div class="sheet" id="sheet" hidden><div class="in">
     <div class="shead"><span id="info"></span><span id="zMid"></span></div>
@@ -198,7 +207,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       <label><input type="checkbox" id="ci"> 쉬는 동안 삑 소리</label>
       <div class="nud"><span>A</span><button data-w="A" data-d="-0.5">−0.5</button><button data-w="A" data-d="-0.05">−0.05</button><button data-w="A" data-d="0.05">+0.05</button><button data-w="A" data-d="0.5">+0.5</button></div>
       <div class="nud"><span>B</span><button data-w="B" data-d="-0.5">−0.5</button><button data-w="B" data-d="-0.05">−0.05</button><button data-w="B" data-d="0.05">+0.05</button><button data-w="B" data-d="0.5">+0.5</button></div>
-      <div style="color:#8d95a1;font-size:12px;line-height:1.6">위 막대: 곡 전체 (끌면 새 구간, 파란색 = 저장한 구간, 누르면 불러오기) · 아래 막대: 구간 확대<br>아래 줄: ⟲ 구간 처음 · ▶ 재생 · A·B 찍기 · ⌫ 구간 지우기 · − + 속도 · ⋯ 더보기 · ✕ 연습 화면 닫기<br>페달/키보드: ← PageUp 구간 처음 · → PageDown 재생/정지 · Enter 또는 M = A·B 찍기 · Delete 구간 지우기 · [ ] A/B 따로 · ↑ ↓ 속도</div>
+      <div style="color:#8d95a1;font-size:12px;line-height:1.6">위 막대: 곡 전체 (끌면 새 구간, 파란색 = 저장한 구간, 누르면 불러오기) · 아래 막대: 구간 확대<br>아래 줄: ⟲ 구간 처음 · ▶ 재생 · A·B 찍기 · ⌫ 구간 지우기 · − + 속도 · ☰ 재생목록(있을 때) · ⋯ 더보기 · ✕ 연습 화면 닫기<br>페달/키보드: ← PageUp 구간 처음 · → PageDown 재생/정지 · Enter 또는 M = A·B 찍기 · Delete 구간 지우기 · [ ] A/B 따로 · + − 또는 ↑ ↓ 속도</div>
     </div>
   </div></div>
   <div class="in">
@@ -212,8 +221,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       <button class="sp" data-r="-5" title="느리게">−</button>
       <span class="rate" id="rate">100%</span>
       <button class="sp" data-r="5" title="빠르게">+</button>
+      <button class="plb x2" id="plBtn" title="재생목록" hidden>☰</button>
       <button class="more" id="more" title="더보기">⋯</button>
-      <button id="min" title="연습 화면 닫기">✕</button>
+      <button class="x2" id="min" title="연습 화면 닫기">✕</button>
     </div>
   </div>
 </div>`);
@@ -225,7 +235,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
   pageCss.textContent = [
     'html.pp-full,html.pp-full body{overflow:hidden!important}',
     'html.pp-full .pp-anc{z-index:2147483000!important;transform:none!important;contain:none!important;filter:none!important;will-change:auto!important}',
-    'html.pp-full .pp-player{position:fixed!important;left:0!important;top:0!important;right:auto!important;bottom:auto!important;margin:0!important;width:100vw!important;height:calc(100vh - var(--pp-h,80px))!important;height:calc(100dvh - var(--pp-h,80px))!important;max-width:none!important;max-height:none!important;z-index:2147483000!important;background:#000!important;transform:none!important}',
+    'html.pp-full .pp-player{position:fixed!important;left:0!important;top:0!important;right:auto!important;bottom:auto!important;margin:0!important;width:calc(100vw - var(--pp-r,0px))!important;height:calc(100vh - var(--pp-h,80px))!important;height:calc(100dvh - var(--pp-h,80px))!important;max-width:none!important;max-height:none!important;z-index:2147483000!important;background:#000!important;transform:none!important}',
     'html.pp-full .pp-player .html5-video-container{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;transform:none!important}',
     'html.pp-full .pp-player video{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:100%!important;object-fit:contain!important;transform:none!important}'
   ].join('\n');
@@ -451,7 +461,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     }
     if (tr.on && st.cur < 0) st.rate = cfg.trStart;
     lib = await store.get('pp:lib', {});
-    applyRate(); renderLists(); ui();
+    applyRate(); renderLists(); ui(); renderPlaylist(true);
     if (st.cur >= 0) toast('"' + st.secs[st.cur].n + '" 이어서 연습');
   }
 
@@ -581,6 +591,55 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     ytMark.style.width = ((st.B - st.A) / D * 100) + '%';
   }
 
+  // ---------- YouTube playlist (shown beside the video on wide screens, over it on phones) ----------
+  let plOpen = null, plItems = [], plKey = '', lastPR = -1, plRead = 0;
+  const hasList = () => { try { return new URL(location.href).searchParams.has('list'); } catch (e) { return false; } };
+  const plVisible = () => cfg.open && !!st.id && hasList() && (plOpen == null ? innerWidth >= 900 : plOpen);
+  function readPlaylist() {
+    return [...document.querySelectorAll('ytd-playlist-panel-renderer ytd-playlist-panel-video-renderer, ytm-playlist-panel-video-renderer')].map(e => {
+      const a = e.querySelector('a[href*="watch"]'), href = (a && a.getAttribute('href')) || '', m = href.match(/[?&]v=([\w-]{11})/);
+      const te = e.querySelector('#video-title') || e.querySelector('h3, h4, [class*="Headline"], [class*="title"]');
+      const by = e.querySelector('#byline, [class*="Subhead"], [class*="byline"]');
+      return { id: m && m[1], t: te ? te.textContent.trim() : '', by: by ? by.textContent.trim() : '', a };
+    }).filter((x, i, arr) => x.id && arr.findIndex(y => y.id === x.id) === i);
+  }
+  function renderPlaylist(force) {
+    const show = plVisible();
+    $('#plp').hidden = !show;
+    $('#plBtn').hidden = !(cfg.open && st.id && hasList());
+    $('#plBtn').classList.toggle('on', show);
+    const r = show && innerWidth >= 900 ? Math.min(360, Math.round(innerWidth * 0.86)) : 0;
+    if (r !== lastPR) { lastPR = r; document.documentElement.style.setProperty('--pp-r', r + 'px'); if (fullOn) window.dispatchEvent(new Event('resize')); }
+    if (!show) return;
+    const now = performance.now();
+    if (!force && now - plRead < 700) return;
+    plRead = now;
+    plItems = readPlaylist();
+    const key = st.id + '|' + plItems.map(x => x.id + x.t).join(',');
+    if (key === plKey && !force) return;
+    plKey = key;
+    const head = document.querySelector('ytd-playlist-panel-renderer .title, .playlist-engagement-panel-mix-title, .playlist-panel-list-title, h2.playlist-engagement-panel-header');
+    $('#plT').textContent = (head && head.textContent.trim()) || '재생목록';
+    const box = $('#plList'); box.textContent = '';
+    if (!plItems.length) box.appendChild(el('div', 'empty', '재생목록을 불러오는 중이에요. 잠시 뒤에도 비어 있으면 ✕로 연습 화면을 닫고 유튜브 화면에서 재생목록을 한 번 펼쳐 주세요.'));
+    let cur = null;
+    plItems.forEach((x, i) => {
+      const it = el('div', 'it' + (x.id === st.id ? ' on' : ''));
+      const go = el('button', 'go'); go.appendChild(el('b', '', (i + 1) + '. ' + (x.t || x.id)));
+      if (x.by) go.appendChild(el('small', '', x.by));
+      go.addEventListener('click', () => {
+        if (innerWidth < 900) plOpen = false;
+        if (x.a) x.a.click(); else location.href = location.origin + '/watch?v=' + x.id;
+        renderPlaylist(true);
+      });
+      it.appendChild(go); box.appendChild(it);
+      if (x.id === st.id) cur = it;
+    });
+    if (cur) cur.scrollIntoView({ block: 'nearest' });
+  }
+  $('#plBtn').addEventListener('click', () => { plOpen = !plVisible(); renderPlaylist(true); });
+  $('#plX').addEventListener('click', () => { plOpen = false; renderPlaylist(true); });
+
   // ---------- wiring ----------
   $$('[data-r]').forEach(b => b.addEventListener('click', () => setRate(st.rate + parseInt(b.dataset.r, 10))));
   $('#r100').addEventListener('click', () => setRate(100));
@@ -643,7 +702,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
 
   // Pedal / keyboard (capture phase so YouTube doesn't also act on these keys)
   const keyMap = { ArrowLeft: 'back', PageUp: 'back', ArrowRight: 'play', PageDown: 'play', Enter: 'mark', m: 'mark', M: 'mark',
-    '[': 'A', ']': 'B', ArrowUp: 'up', ArrowDown: 'down', Delete: 'clear' };
+    '[': 'A', ']': 'B', ArrowUp: 'up', ArrowDown: 'down', '+': 'up', '=': 'up', '-': 'down', '_': 'down', Delete: 'clear' };
   window.addEventListener('keydown', e => {
     const act = keyMap[e.key];
     if (!cfg.open || !st.id || !act || e.ctrlKey || e.altKey || e.metaKey) return;
@@ -710,6 +769,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     const w = $('#wrap'), barH = cfg.open ? (w.offsetHeight || 0) : 0;
     const sh = sheetOpen && cfg.open ? ($('#sheet').offsetHeight || 0) : 0;
     root.host.style.setProperty('--h', (barH + sh) + 'px');
+    root.host.style.setProperty('--bh', barH + 'px');
     if (barH !== lastPH) { lastPH = barH; document.documentElement.style.setProperty('--pp-h', barH + 'px'); if (fullOn) window.dispatchEvent(new Event('resize')); }
   }
   function info() {
@@ -745,7 +805,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       if (loopActive() && !inGap && !drag && !video.paused && performance.now() - lastLoop > 250 && video.currentTime >= st.B) loopEnd();
     }
     const now = performance.now();
-    if (now - lastInfo > 100) { lastInfo = now; info(); renderBars(); renderYT(); setFull(cfg.open && !!st.id); layout(); }
+    if (now - lastInfo > 100) { lastInfo = now; info(); renderBars(); renderYT(); setFull(cfg.open && !!st.id); layout(); renderPlaylist(); }
     if (!tick.busy) { tick.busy = true; requestAnimationFrame(() => { tick.busy = false; tick(); }); }
   }
 
