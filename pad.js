@@ -110,6 +110,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
 .plh button{background:#1c2128;border-radius:8px;padding:5px 10px;font-size:13px;flex:none}
 #plList{overflow:auto;padding:0 6px 8px;flex:1;align-content:start}
 #plList .go small{display:block}
+.pli{display:flex;gap:8px;align-items:center}
+.pli .th{position:relative;flex:none;width:96px;height:54px;border-radius:6px;overflow:hidden;background:#000}
+.pli .th img{width:100%;height:100%;object-fit:cover;display:block}
+.pli .th i{position:absolute;right:3px;bottom:3px;font-style:normal;font-size:10px;font-weight:700;background:#000c;color:#fff;padding:0 3px;border-radius:3px}
+.pli .tx{min-width:0;flex:1}
+.it .pli .tx b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;line-height:1.3}
 .rate{display:flex;align-items:center;justify-content:center;color:#f5a524;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
 .bar{position:relative;border-radius:7px;background:#1b1f25;touch-action:none;cursor:pointer;overflow:hidden}
 .full{height:22px;background:#20252c}.zoom{height:24px;background:#181c22;box-shadow:inset 0 0 0 1px #262c34}
@@ -606,7 +612,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       const a = e.querySelector('a[href*="watch"]'), href = (a && a.getAttribute('href')) || '', m = href.match(/[?&]v=([\w-]{11})/);
       const te = e.querySelector('#video-title') || e.querySelector('h3, h4, [class*="Headline"], [class*="title"]');
       const by = e.querySelector('#byline, [class*="Subhead"], [class*="byline"]');
-      return { id: m && m[1], t: te ? te.textContent.trim() : '', by: by ? by.textContent.trim() : '', a };
+      const du = [...e.querySelectorAll('ytd-thumbnail-overlay-time-status-renderer #text, [class*="adgeShapeText"], [class*="badge-shape"]')].map(x => x.textContent.trim()).find(x => /^\d+:\d\d/.test(x));
+      return { id: m && m[1], t: te ? te.textContent.trim() : '', by: by ? by.textContent.trim() : '', d: du || '', a };
     }).filter((x, i, arr) => x.id && arr.findIndex(y => y.id === x.id) === i);
   }
   function renderPlaylist(force) {
@@ -631,8 +638,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     let cur = null;
     plItems.forEach((x, i) => {
       const it = el('div', 'it' + (x.id === st.id ? ' on' : ''));
-      const go = el('button', 'go'); go.appendChild(el('b', '', (i + 1) + '. ' + (x.t || x.id)));
-      if (x.by) go.appendChild(el('small', '', x.by));
+      const go = el('button', 'go pli'), th = el('span', 'th'), im = document.createElement('img'), tx = el('span', 'tx');
+      im.loading = 'lazy'; im.alt = ''; im.src = 'https://i.ytimg.com/vi/' + x.id + '/mqdefault.jpg';
+      th.appendChild(im); if (x.d) th.appendChild(el('i', '', x.d));
+      tx.appendChild(el('b', '', (i + 1) + '. ' + (x.t || x.id)));
+      if (x.by) tx.appendChild(el('small', '', x.by));
+      go.append(th, tx);
       go.addEventListener('click', () => {
         if (innerWidth < 900) plOpen = false;
         if (x.a) x.a.click(); else location.href = location.origin + '/watch?v=' + x.id;
