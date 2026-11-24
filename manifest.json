@@ -1,21 +1,32 @@
 {
   "manifest_version": 3,
   "name": "카피 연습 패드 for YouTube",
-  "version": "0.1.0",
-  "description": "유튜브 영상으로 악기 카피 연습: A-B 구간 반복, 음정 유지 속도 조절, 단계별 자동 속도 올리기, 블루투스 페달 지원.",
+  "version": "0.2.0",
+  "description": "유튜브 영상으로 악기 카피 연습: A-B 구간 반복, 곡별 구간 저장, 음정 유지 속도 조절, 단계별 자동 속도 올리기, 블루투스 페달 지원.",
   "content_scripts": [
     {
-      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*"],
-      "js": ["pad.js"],
+      "matches": [
+        "https://www.youtube.com/*",
+        "https://m.youtube.com/*"
+      ],
+      "js": [
+        "pad.js"
+      ],
       "run_at": "document_idle"
     }
   ],
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "browser_specific_settings": {
     "gecko": {
       "id": "copy-practice-pad@model15rocker-ctrl",
       "strict_min_version": "128.0",
-      "data_collection_permissions": { "required": ["none"] }
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     },
     "gecko_android": {
       "strict_min_version": "128.0"
