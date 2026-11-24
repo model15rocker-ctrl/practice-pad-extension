@@ -19,7 +19,7 @@
   };
 
   // ---------- state ----------
-  const cfg = { gap: 0, ci: true, trStart: 60, trTarget: 100, trStep: 5, trEvery: 3, open: true, lat: 0.3, back: 5 };
+  const cfg = { gap: 0, ci: true, trStart: 60, trTarget: 100, trStep: 5, trEvery: 3, open: true, lat: 0.3 };
   // secs: saved sections of this song [{n: name, A, B, r: rate%}], cur: index of the section being edited (-1 = unsaved)
   const st = { id: null, A: null, B: null, loopOn: true, rate: 100, loops: 0, secs: [], cur: -1, title: '' };
   const tr = { on: false, done: 0, reached: false };
@@ -94,12 +94,11 @@
 button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulation;user-select:none}
 .wrap{pointer-events:auto;position:fixed;left:0;right:0;bottom:0;background:#0b0d10;color:#eceff2;border-top:1px solid #222830;padding:4px 6px calc(4px + env(safe-area-inset-bottom))}
 .in{max-width:820px;margin:0 auto;display:grid;gap:4px}
-.ctl{display:grid;grid-template-columns:1fr 1.25fr 1.25fr 1fr .8fr 1.1fr .8fr .8fr .8fr;gap:4px;height:42px}
+.ctl{display:grid;grid-template-columns:1fr 1.3fr 1.3fr .85fr 1.1fr .85fr .8fr .8fr;gap:4px;height:42px}
 .ctl button{background:#1c2128;border-radius:9px;font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;min-width:0}
 .ctl button:active,.sheet button:active{filter:brightness(1.5)}
 .ctl .play{background:#123b2a;color:#2fcf8a}.ctl .play.on{background:#262c34;color:#eceff2}
 .ctl .ab{background:#2d2410;color:#f5a524;font-size:15px}.ctl .ab.wait{background:#5a4208;box-shadow:inset 0 0 0 2px #f5a524}
-.ctl .rp{background:#1a2638;color:#7fb4ff;font-size:15px}
 .ctl .sp{font-size:20px}
 .ctl .more.on{background:#f5a524;color:#1a1200}
 .rate{display:flex;align-items:center;justify-content:center;color:#f5a524;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
@@ -190,14 +189,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       <div class="stat" id="trStat"></div>
       <div><b>늦게 누름 보정</b> <span style="color:#8d95a1">(A를 찍을 때 이만큼 앞당김)</span></div>
       <div class="seg s4" id="latSeg"><button data-v="0">없음</button><button data-v="0.15">0.15초</button><button data-v="0.3">0.3초</button><button data-v="0.5">0.5초</button></div>
-      <div><b>"방금 거 다시" 길이</b></div>
-      <div class="seg" id="backSeg"><button data-v="3">3초</button><button data-v="5">5초</button><button data-v="8">8초</button><button data-v="10">10초</button><button data-v="15">15초</button></div>
       <div><b>반복 사이 쉬기 · 카운트인</b></div>
       <div class="seg" id="gapSeg"><button data-v="0">없음</button><button data-v="1">1초</button><button data-v="2">2초</button><button data-v="3">3초</button><button data-v="4">4초</button></div>
       <label><input type="checkbox" id="ci"> 쉬는 동안 삑 소리</label>
       <div class="nud"><span>A</span><button data-w="A" data-d="-0.5">−0.5</button><button data-w="A" data-d="-0.05">−0.05</button><button data-w="A" data-d="0.05">+0.05</button><button data-w="A" data-d="0.5">+0.5</button></div>
       <div class="nud"><span>B</span><button data-w="B" data-d="-0.5">−0.5</button><button data-w="B" data-d="-0.05">−0.05</button><button data-w="B" data-d="0.05">+0.05</button><button data-w="B" data-d="0.5">+0.5</button></div>
-      <div style="color:#8d95a1;font-size:12px;line-height:1.6">아래 줄: ⟲ 구간 처음 · ▶ 재생 · A·B 찍기 · ↺ 방금 거 다시 · − + 속도 · ⋯ 더보기 · ✕ 연습 화면 닫기<br>페달/키보드: ← PageUp 구간 처음 · → PageDown 재생/정지 · Enter 또는 M = A·B 찍기 · R = 방금 거 다시 · [ ] A/B 따로 · ↑ ↓ 속도</div>
+      <div style="color:#8d95a1;font-size:12px;line-height:1.6">아래 줄: ⟲ 구간 처음 · ▶ 재생 · A·B 찍기 · − + 속도 · ⋯ 더보기 · ✕ 연습 화면 닫기<br>페달/키보드: ← PageUp 구간 처음 · → PageDown 재생/정지 · Enter 또는 M = A·B 찍기 · [ ] A/B 따로 · ↑ ↓ 속도</div>
     </div>
   </div></div>
   <div class="in">
@@ -206,7 +203,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       <button id="back" title="구간 처음">⟲</button>
       <button class="play" id="play" title="재생/정지">▶</button>
       <button class="ab" id="mk" title="A·B 찍기"><span id="mkT">A·B</span></button>
-      <button class="rp" id="rp" title="방금 거 다시"><span id="rpS">↺5</span></button>
       <button class="sp" data-r="-5" title="느리게">−</button>
       <span class="rate" id="rate">100%</span>
       <button class="sp" data-r="5" title="빠르게">+</button>
@@ -345,14 +341,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
   function mark() {
     if (!video) return; unlock();
     if (markStage === 0 || st.A == null) setA(); else setB();
-  }
-  // "방금 거 다시": loop the last few seconds right away.
-  function replay() {
-    if (!video) return; unlock();
-    const t = video.currentTime, n = cfg.back;
-    if (t < 0.5) { toast('조금 더 재생한 뒤 눌러 주세요'); return; }
-    newRange(); st.A = Math.max(0, t - n); st.B = t; markStage = 0; st.loopOn = true;
-    save(); toast('방금 ' + n + '초 반복'); goA(true);
   }
   function toggleLoop() { st.loopOn = !st.loopOn; save(); ui(); toast(st.loopOn ? '구간 반복 켜짐' : '구간 반복 꺼짐'); }
 
@@ -570,7 +558,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
   $('#back').addEventListener('click', () => goA(true));
   $('#play').addEventListener('click', togglePlay);
   $('#mk').addEventListener('click', mark);
-  $('#rp').addEventListener('click', replay);
   const showPanel = p => { panel = panel === p ? '' : p; sheetOpen = true; if (panel === 'lib') { libTab = 'song'; renderLists(); } ui(); };
   $('#gear').addEventListener('click', () => showPanel('set'));
   $('#libBtn').addEventListener('click', () => showPanel('lib'));
@@ -603,7 +590,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     });
     inp.addEventListener('keydown', e => e.stopPropagation());
   }
-  const segs = { gapSeg: 'gap', latSeg: 'lat', backSeg: 'back' };
+  const segs = { gapSeg: 'gap', latSeg: 'lat' };
   for (const [sid, key] of Object.entries(segs))
     $$('#' + sid + ' button').forEach(b => b.addEventListener('click', () => { cfg[key] = +b.dataset.v; saveCfg(); ui(); }));
   $('#ci').addEventListener('change', e => { cfg.ci = e.target.checked; saveCfg(); });
@@ -621,7 +608,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
 
   // Pedal / keyboard (capture phase so YouTube doesn't also act on these keys)
   const keyMap = { ArrowLeft: 'back', PageUp: 'back', ArrowRight: 'play', PageDown: 'play', Enter: 'mark', m: 'mark', M: 'mark',
-    r: 'replay', R: 'replay', '[': 'A', ']': 'B', ArrowUp: 'up', ArrowDown: 'down' };
+    '[': 'A', ']': 'B', ArrowUp: 'up', ArrowDown: 'down' };
   window.addEventListener('keydown', e => {
     const act = keyMap[e.key];
     if (!cfg.open || !st.id || !act || e.ctrlKey || e.altKey || e.metaKey) return;
@@ -634,7 +621,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
       case 'back': goA(true); break;
       case 'play': togglePlay(); break;
       case 'mark': mark(); break;
-      case 'replay': replay(); break;
       case 'A': setA(); break;
       case 'B': setB(); break;
       case 'up': setRate(st.rate + 5); toast('속도 ' + st.rate + '%'); break;
@@ -666,7 +652,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;touch-action:manipulat
     $('#mk').classList.toggle('wait', waitB);
     $('#mkT').textContent = waitB ? 'B' : 'A·B';
     $('#mk').title = waitB ? 'B 찍기 (A ' + fmt(st.A) + ')' : 'A·B 찍기';
-    $('#rpS').textContent = '↺' + cfg.back;
     $('#add').textContent = cs ? '✓ ' + cs.n : '＋ 저장';
     $('#rate').textContent = st.rate + '%';
     $('#loop').textContent = st.loopOn ? '반복 ON' : '반복 OFF';
